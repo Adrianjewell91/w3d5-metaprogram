@@ -5,7 +5,7 @@ describe 'AssocOptions' do
     it 'provides defaults' do
       options = BelongsToOptions.new('house')
 
-      expect(options.foreign_key).to eq(:house_id)
+      expect(options.foreign_key).to eq(:house_id) #where does it get these?
       expect(options.class_name).to eq('House')
       expect(options.primary_key).to eq(:id)
     end
@@ -65,7 +65,7 @@ describe 'AssocOptions' do
       options = HasManyOptions.new('cats', 'Human')
       expect(options.model_class).to eq(Cat)
     end
-    
+
     it '#table_name returns table name of associated object' do
       options = BelongsToOptions.new('human')
       expect(options.table_name).to eq('humans')

@@ -100,32 +100,45 @@ class SQLObject
 
   def attribute_values
     # ...
-    self.class.columns.inject([]) do |acc, attribute|
-      acc << attributes[attribute]
-      acc
-    end
+    self.class.columns.map{|column| self.send(column)}
   end
 
   def insert # instance method, using class methods.
     # ...
-    # byebug
-    col_names = self.class.columns[1..-1].join(', ')
-    insert_values = attribute_values[1..-1]
-    question_marks = Array.new(attribute_values.length-1,'?').join(',')
-    #I need to remove the id, part
-    DBConnection.execute(<<-SQL, *insert_values)
-    INSERT INTO
-      #{self.class.table_name} (#{col_names})
-    VALUES
-      (#{question_marks})
+
+    col_names = self.class.columns[1..-1].join(',')
+    question_marks = Array.new(attribute_values.length-1,'?').join(', ')
+
+    DBConnection.execute(<<-SQL, *attribute_values[1..-1])
+      INSERT INTO
+        #{self.class.table_name} (#{col_names})
+      VALUES
+        (#{question_marks})
     SQL
+
+    attributes[:id] = DBConnection.last_insert_row_id
   end
 
   def update
     # ...
+    col_names = self.class.columns[1..-1].map{ |col| "#{col} = ?" }.join(',')
+
+    DBConnection.execute(<<-SQL, *attribute_values[1..-1], id)
+      UPDATE
+        #{self.class.table_name}
+      SET
+        #{col_names}
+      WHERE
+        id = ?
+    SQL
   end
 
   def save
     # ...
+    if attributes[:id].nil?
+      insert
+    else
+      update
+    end
   end
 end
